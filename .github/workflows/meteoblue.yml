@@ -1,0 +1,38 @@
+name: Run Python Meteoblue Script
+
+on:
+#  schedule:
+    # Запуск в 9:00 и 20:30 UTC → 12:00 и 23:30 по Москве (UTC+3)
+#    - cron: '0 9 * * *'  
+#    - cron: '30 20 * * *'
+  repository_dispatch:
+    types: [meteoblue-trigger]  # имя события (может быть любым)
+  
+  # Позволяет запустить вручную из GitHub UI (для тестов)
+  workflow_dispatch:
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+
+      - name: Run the script
+        env:
+          TELEBOT_TOKEN: ${{ secrets.TELEBOT_TOKEN }}
+          METEOBLUE_OLD_TOKEN: ${{ secrets.METEOBLUE_OLD_TOKEN }}
+          METEOBLUE_NEW_TOKEN: ${{ secrets.METEOBLUE_NEW_TOKEN }}
+        run: python meteoblue.py
